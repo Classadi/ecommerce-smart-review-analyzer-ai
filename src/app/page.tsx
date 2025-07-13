@@ -1,103 +1,204 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+
+export default function Page() {
+  const [review, setReview] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<any | null>(null)
+
+  const handleSubmit = async () => {
+    if (!review.trim()) return
+    setLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch('http://localhost:5000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ review }),
+      })
+      const data = await res.json()
+      setResult(data)
+    } catch (error) {
+      console.error('Error:', error)
+    }
+    setLoading(false)
+  }
+
+  // Dynamic color for emotions
+  const getEmotionColor = (emotion: string) => {
+    const map: Record<string, string> = {
+      joy: 'bg-yellow-400',
+      anger: 'bg-red-500',
+      fear: 'bg-purple-600',
+      sadness: 'bg-blue-500',
+      trust: 'bg-green-500',
+      surprise: 'bg-pink-500',
+      anticipation: 'bg-orange-400',
+      disgust: 'bg-gray-500',
+    }
+    return map[emotion.toLowerCase()] || 'bg-white'
+  }
+
+  // Dynamic color for toxicity types
+  const getToxicityColor = (type: string) => {
+    const map: Record<string, string> = {
+      toxic: 'bg-red-600',
+      severe_toxic: 'bg-red-800',
+      obscene: 'bg-orange-500',
+      threat: 'bg-purple-700',
+      insult: 'bg-pink-600',
+      identity_hate: 'bg-yellow-600',
+    }
+    return map[type.toLowerCase()] || 'bg-white'
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-[#0f172a] text-white p-6 md:p-10 font-sans">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold text-yellow-400 mb-6">
+          🛍️ Flipkart Review Analyzer
+        </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <Textarea
+          className="min-h-[140px] bg-gray-800 text-white border-yellow-500 mb-4 focus-visible:ring-yellow-400"
+          placeholder="Paste your product review here..."
+          value={review}
+          onChange={(e) => setReview(e.target.value)}
+        />
+
+        <Button
+          className="bg-yellow-400 text-black hover:bg-yellow-500 transition"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Analyzing...' : 'Analyze Review'}
+        </Button>
+
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <Card className="bg-gray-900 text-white mt-8 shadow-lg border border-gray-700">
+              <CardContent className="p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl md:text-2xl font-semibold text-yellow-400">
+                    Sentiment:
+                  </h2>
+                  <span
+                    className={`text-sm font-bold px-3 py-1 rounded-full ${
+                      result.sentiment === 'Positive'
+                        ? 'bg-green-600 text-white'
+                        : result.sentiment === 'Negative'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-yellow-500 text-black'
+                    }`}
+                  >
+                    {result.sentiment}
+                  </span>
+                </div>
+
+                <Progress
+                  value={Math.abs(result.score * 100)}
+                  className="h-3 [&>*]:bg-yellow-400 bg-gray-700"
+                />
+                <p className="text-sm">
+                  <span className="text-gray-400">Polarity:</span>{' '}
+                  {result.score} |{' '}
+                  <span className="text-gray-400">Subjectivity:</span>{' '}
+                  {result.subjectivity}
+                </p>
+
+                <Tabs defaultValue="emotions" className="w-full mt-4">
+                  <TabsList className="bg-gray-800 rounded-lg">
+                    <TabsTrigger value="emotions">Emotions</TabsTrigger>
+                    <TabsTrigger value="entities">NER</TabsTrigger>
+                    <TabsTrigger value="toxicity">Toxicity</TabsTrigger>
+                    <TabsTrigger value="lang">Translation</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="emotions">
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {Object.entries(result.emotions || {}).map(
+                        ([emotion, score]: any) => (
+                          <div key={emotion}>
+                            <Label className="text-sm text-gray-300">
+                              {emotion}
+                            </Label>
+                            <Progress
+                              value={score * 100}
+                              className={`h-2 bg-gray-700 [&>*]:${getEmotionColor(
+                                emotion
+                              )}`}
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="entities">
+                    {result.entities.length > 0 ? (
+                      <ul className="mt-4 list-disc pl-4 space-y-1 text-sm">
+                        {result.entities.map((ent: any, index: number) => (
+                          <li key={index}>
+                            <strong>{ent.text}</strong> —{' '}
+                            <span className="text-yellow-300">{ent.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-400 mt-4 text-sm">
+                        No named entities detected.
+                      </p>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="toxicity">
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {Object.entries(result.toxicity || {}).map(
+                        ([key, val]: any) => (
+                          <div key={key}>
+                            <Label className="text-sm text-gray-300">{key}</Label>
+                            <Progress
+                              value={val * 100}
+                              className={`h-2 bg-gray-700 [&>*]:${getToxicityColor(
+                                key
+                              )}`}
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="lang">
+                    <div className="mt-4 space-y-2 text-sm">
+                      <p>
+                        <strong>Detected Language:</strong>{' '}
+                        <span className="text-yellow-300">{result.language}</span>
+                      </p>
+                      <p>
+                        <strong>Translated Text:</strong>{' '}
+                        <span className="text-gray-300">{result.translated_text}</span>
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
